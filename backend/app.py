@@ -101,9 +101,15 @@ def ipc_assistant_search():
 # ---------------- IPC EXPLAIN ----------------
 @app.route("/api/ipc/assistant/explain", methods=["POST"])
 def ipc_assistant_explain():
-    section_no = request.json.get("section", "").strip()
-    section = next((s for s in ipc_sections if s["section"] == section_no), None)
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"error": "A JSON object is required."}), 400
 
+    section_no = payload.get("section")
+    if not isinstance(section_no, str) or not section_no.strip():
+        return jsonify({"error": "'section' must be a non-empty string."}), 400
+
+    section = next((s for s in ipc_sections if s["section"] == section_no.strip()), None)
     if not section:
         return jsonify({"error": "Section not found"}), 404
 
@@ -112,10 +118,10 @@ def ipc_assistant_explain():
         "title": section["title"],
         "law_text": section["law_text"],
         "explanation": (
-            "This section defines the offense, its legal ingredients, "
-            "and the punishment prescribed under Indian Penal Code. "
-            "Provided for educational understanding only."
-        )
+            "This educational summary describes the supplied section data only. "
+            "It is not legal advice and may not reflect the latest amendments."
+        ),
+        "disclaimer": "Check current official legislation and consult a qualified lawyer for advice.",
     })
 
 # ---------------- WOMEN DASHBOARD ----------------
@@ -159,43 +165,50 @@ def get_legal_faqs():
 def get_helplines():
     return jsonify(helplines)
 
-# ---------------- CASE OUTCOME ----------------
+# ---------------- CASE FACTORS (NON-PREDICTIVE) ----------------
 @app.route("/api/case/predict", methods=["POST"])
 def predict_case():
-    data = request.json
-    evidence = data.get("evidence_strength", "Moderate")
-    past = data.get("past_record", "None")
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"error": "A JSON object is required."}), 400
 
-    score = 50
-    score += 25 if evidence == "Strong" else 15 if evidence == "Moderate" else 5
-    score += 10 if past == "Serious" else 5 if past == "Minor" else 0
-    score = min(score, 95)
+    evidence = payload.get("evidence_strength", "Moderate")
+    past = payload.get("past_record", "None")
+    valid_evidence = {"Limited", "Moderate", "Strong"}
+    valid_past_records = {"None", "Minor", "Serious"}
+    if evidence not in valid_evidence or past not in valid_past_records:
+        return jsonify({
+            "error": "evidence_strength must be Limited, Moderate, or Strong; past_record must be None, Minor, or Serious."
+        }), 400
 
     return jsonify({
+        "assessment_status": "educational_checklist_only",
         "possible_outcome": {
-            "probability": f"{score}%",
-            "result": "Conviction" if score >= 60 else "Acquittal",
-            "basis": "Based on case facts and evidence strength"
+            "probability": "Not calculated",
+            "result": "Not predicted",
+            "basis": (
+                "This prototype does not contain a validated legal-outcome model "
+                "or a case dataset suitable for estimating conviction probabilities."
+            )
+        },
+        "inputs": {
+            "evidence_strength": evidence,
+            "past_record": past,
         },
         "key_factors": [
-            "Strength of available evidence",
-            "Nature of the offense",
-            "Legal precedents in similar cases",
-            "Criminal history consideration"
+            "Strength and admissibility of the available evidence",
+            "Applicable law and the specific facts of the case",
+            "Relevant and current judicial precedents",
+            "Procedural requirements and jurisdiction"
         ],
-        "ai_reasoning": (
-            "Based on the provided information, the evidence strength and "
-            "nature of the offense significantly influence outcomes. "
-            "This is an educational simulation, not a legal prediction."
-        ),
         "next_steps": [
-            "Gather all documentary evidence",
-            "Consult with a qualified lawyer immediately",
-            "Prepare witness statements if available"
+            "Organize relevant documents and evidence",
+            "Check current official legislation and applicable precedents",
+            "Consult a qualified lawyer about the specific circumstances"
         ],
         "disclaimer": (
-            "This tool is for educational understanding purposes only "
-            "and does not constitute legal advice."
+            "Educational information only. This endpoint does not predict a case outcome, "
+            "estimate a real probability, or provide legal advice."
         )
     })
 
