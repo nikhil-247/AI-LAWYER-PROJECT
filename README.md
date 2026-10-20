@@ -43,11 +43,17 @@ The **AI Lawyer Platform** is a comprehensive legal analytics and assistance sys
 - ✅ **Intelligent IPC Section Search**: Find and understand Indian Penal Code sections instantly
 - 📊 **Crime Analytics Dashboard**: Visualize crime trends with interactive charts
 - 👩 **Women Safety Analytics**: Dedicated insights on crimes against women
-- 🔮 **Case Factors Checklist (non-predictive demo)**: Evidence-based predictions for legal scenarios
+- 🔮 **Case Factors Checklist (non-predictive demo)**: Educational considerations only; no outcome or probability is calculated
 - 📚 **Legal Awareness Hub**: Educational content on rights and legal processes
 - 🆘 **Emergency Helplines**: Quick access to legal and safety resources
 
 ---
+
+## Scope and data-quality notes
+
+This repository is an educational analytics prototype, not a legal decision system. The case-factor endpoint does not calculate a conviction/acquittal probability because the project does not contain a validated legal-outcome model. Its output must not be presented as legal advice or used to make decisions about a real case.
+
+The current backend reads CSV/JSON files at startup and exposes endpoints for crime-statistics summaries, IPC text search, educational material, FAQs, and helplines. Verify statutes, amendments, helpline information, and dataset provenance against current official sources before relying on the content. The API currently uses permissive CORS for development and is not production-hardened.
 
 ## 🚨 Problem Statement
 
@@ -57,7 +63,7 @@ Despite India's comprehensive legal system, critical barriers exist:
 2. **Information Inaccessibility**: No centralized platform for legal knowledge
 3. **Data Fragmentation**: Crime statistics scattered and unanalyzed
 4. **Women's Safety Gaps**: Limited awareness of protections and resources
-5. **Lack of Guidance**: No tools to assess legal case strength
+5. **Lack of Guidance**: Need for accessible, clearly scoped legal education and resource discovery
 
 **Target Impact**: Empower 10 million+ citizens with accessible legal knowledge in the first year.
 
@@ -81,9 +87,9 @@ Despite India's comprehensive legal system, critical barriers exist:
 - **Category Tracking**: Rape, dowry deaths, domestic violence, trafficking
 
 ### 4. ⚖️ Case Factors Checklist (non-predictive demo)
-- **Evidence Assessment**: Analyze case strength
-- **Probability Calculation**: Data-driven outcome predictions
-- **Strategic Insights**: Key factors and recommended actions
+- **Input fields**: Capture a small set of case-factor labels for an educational checklist
+- **No probability generated**: The endpoint deliberately does not predict conviction or acquittal
+- **General next steps**: Provides reminders to organize evidence, review current official law, and consult qualified counsel
 
 ### 5. 📚 Legal Awareness & Resources
 - **Rights Education**: Know your fundamental rights
@@ -106,7 +112,7 @@ Despite India's comprehensive legal system, critical barriers exist:
 │  Port: 5000 | RESTful API with CORS                │
 │  • IPC Search Engine                                │
 │  • Analytics Processor (Pandas)                     │
-│  • Prediction Algorithm                             │
+│  • Non-predictive case-factor checklist             │
 └────────────────┬────────────────────────────────────┘
                  │ File I/O
                  ▼
