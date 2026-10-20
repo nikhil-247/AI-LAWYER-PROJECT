@@ -65,16 +65,16 @@ Despite India's comprehensive legal system, critical barriers exist:
 4. **Women's Safety Gaps**: Limited awareness of protections and resources
 5. **Lack of Guidance**: Need for accessible, clearly scoped legal education and resource discovery
 
-**Target Impact**: Empower 10 million+ citizens with accessible legal knowledge in the first year.
+**Intended impact**: Improve access to basic legal-information resources. No user-reach or outcome metrics have been measured in this prototype.
 
 ---
 
 ## ✨ Key Features
 
-### 1. 🔍 IPC AI Assistant
-- **Smart Search**: Natural language queries across 500+ IPC sections
-- **Detailed Explanations**: Simplified legal text with examples
-- **Contextual Suggestions**: Related sections and case references
+### 1. 🔍 IPC Section Search
+- **Keyword search** across the 737 section records currently packaged in `backend/data/ipc_sections.json`
+- **Stored text** returned from the local data file; the current endpoint does not call an LLM to generate legal explanations
+- **Scope note**: IPC materials can be outdated or superseded; verify current applicable legislation before relying on the text
 
 ### 2. 📈 Crime Analytics Dashboard
 - **Trend Visualization**: Year-over-year crime patterns
@@ -339,7 +339,7 @@ GET /api/crime/summary
 GET /api/women/dashboard
 ```
 
-#### Case Outcome Prediction
+#### Educational Case-Factor Checklist (non-predictive)
 ```http
 POST /api/case/predict
 Content-Type: application/json
@@ -370,9 +370,9 @@ const searchIPC = async (query) => {
 searchIPC("murder");
 ```
 
-### Example 2: Predict Case Outcome
+### Example 2: Generate an educational case-factor checklist
 ```javascript
-const predictCase = async (caseDetails) => {
+const getCaseChecklist = async (caseFactors) => {
   const response = await fetch(
     'http://localhost:5000/api/case/predict',
     {
