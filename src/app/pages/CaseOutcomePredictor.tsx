@@ -2,10 +2,8 @@ import { useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
-import { Textarea } from "../components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -13,51 +11,66 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { Brain, AlertTriangle, Shield, FileText } from "lucide-react";
+import { AlertTriangle, FileText, ShieldCheck } from "lucide-react";
+
+interface CaseChecklistResponse {
+  assessment_status: "educational_checklist_only";
+  possible_outcome: {
+    probability: string;
+    result: string;
+    basis: string;
+  };
+  inputs: {
+    evidence_strength: string;
+    past_record: string;
+  };
+  key_factors: string[];
+  next_steps: string[];
+  disclaimer: string;
+}
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5000").replace(/\/$/, "");
 
 export default function CaseOutcomePredictor() {
   const [loading, setLoading] = useState(false);
-  const [showPrediction, setShowPrediction] = useState(false);
-
-  const [caseType, setCaseType] = useState("");
-  const [ipcSection, setIpcSection] = useState("");
-  const [caseFacts, setCaseFacts] = useState("");
   const [evidence, setEvidence] = useState("Moderate");
   const [pastRecord, setPastRecord] = useState("None");
-
-  const [prediction, setPrediction] = useState<any>(null);
+  const [assessment, setAssessment] = useState<CaseChecklistResponse | null>(null);
   const [error, setError] = useState("");
 
-  const handlePredict = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAssess = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setLoading(true);
     setError("");
-    setShowPrediction(false);
+    setAssessment(null);
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/case/predict", {
+      const response = await fetch(`${API_BASE_URL}/api/case/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          case_type: caseType,
-          ipc_section: ipcSection,
-          case_facts_summary: caseFacts,
           evidence_strength: evidence,
           past_record: pastRecord,
         }),
       });
 
-      // ✅ SAFETY CHECK
-      if (!res.ok) {
-        throw new Error("Prediction API error");
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message = payload && typeof payload.error === "string"
+          ? payload.error
+          : "The checklist service returned an error.";
+        throw new Error(message);
       }
 
-      const data = await res.json();
-      setPrediction(data);
-      setShowPrediction(true);
-    } catch (err) {
+      if (!payload || payload.assessment_status !== "educational_checklist_only") {
+        throw new Error("The service returned an unexpected response.");
+      }
+      setAssessment(payload as CaseChecklistResponse);
+    } catch (caught) {
       setError(
-        "Prediction service is temporarily unavailable. Please try again later."
+        caught instanceof Error
+          ? caught.message
+          : "The checklist service is unavailable. Please try again."
       );
     } finally {
       setLoading(false);
@@ -67,92 +80,53 @@ export default function CaseOutcomePredictor() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
-
-      <div className="flex-1 py-12">
+      <main className="flex-1 py-12">
         <div className="max-w-5xl mx-auto px-4">
-          <h1 className="text-4xl text-[#1a2847] mb-2">
-            Case Outcome Predictor (Educational Prototype)
+          <h1 className="text-3xl md:text-4xl text-[#1a2847] mb-2">
+            Case Factors Checklist
           </h1>
           <p className="text-gray-600 mb-8">
-            Explainable, dataset-driven legal outcome simulation
+            An educational checklist for organizing questions to discuss with a qualified lawyer.
           </p>
 
-          {/* DISCLAIMER */}
-          <Card className="mb-8 bg-red-50 border-2 border-red-200">
+          <Card className="mb-8 bg-amber-50 border-amber-200">
             <CardContent className="p-6 flex gap-3">
-              <AlertTriangle className="w-7 h-7 text-red-600" />
-              <p className="text-sm text-red-700">
-                <strong>Important:</strong> This tool is meant only to help users
-                understand legal concepts and is not legal advice.
-              </p>
+              <AlertTriangle className="w-7 h-7 text-amber-700 shrink-0" />
+              <div className="text-sm text-amber-900">
+                <strong>This is not a case predictor.</strong> The tool does not estimate conviction,
+                acquittal, or any probability. Do not enter names or confidential case details.
+                It is not legal advice and may not reflect current law.
+              </div>
             </CardContent>
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* INPUT FORM */}
             <Card>
               <CardHeader className="bg-[#1a2847] text-white">
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Case Details
+                  Checklist inputs
                 </CardTitle>
               </CardHeader>
-
               <CardContent className="p-6">
-                <form onSubmit={handlePredict} className="space-y-5">
+                <form onSubmit={handleAssess} className="space-y-5">
                   <div>
-                    <Label>Case Type</Label>
-                    <Select onValueChange={setCaseType} required>
-                      <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Select case type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Criminal">Criminal</SelectItem>
-                        <SelectItem value="Civil">Civil</SelectItem>
-                        <SelectItem value="Family">Family</SelectItem>
-                        <SelectItem value="Property">Property</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label>Relevant IPC Section</Label>
-                    <Input
-                      className="mt-2"
-                      placeholder="e.g. IPC 420"
-                      value={ipcSection}
-                      onChange={(e) => setIpcSection(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Case Facts Summary</Label>
-                    <Textarea
-                      className="mt-2 min-h-[120px]"
-                      placeholder="Briefly describe the facts, events, and circumstances of the case..."
-                      value={caseFacts}
-                      onChange={(e) => setCaseFacts(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Evidence Strength</Label>
-                    <Select onValueChange={setEvidence} defaultValue="Moderate">
+                    <Label>Self-assessed evidence strength</Label>
+                    <Select value={evidence} onValueChange={setEvidence}>
                       <SelectTrigger className="mt-2">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Strong">Strong</SelectItem>
+                        <SelectItem value="Limited">Limited</SelectItem>
                         <SelectItem value="Moderate">Moderate</SelectItem>
-                        <SelectItem value="Weak">Weak</SelectItem>
+                        <SelectItem value="Strong">Strong</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label>Past Criminal Record</Label>
-                    <Select onValueChange={setPastRecord} defaultValue="None">
+                    <Label>Past record (if relevant)</Label>
+                    <Select value={pastRecord} onValueChange={setPastRecord}>
                       <SelectTrigger className="mt-2">
                         <SelectValue />
                       </SelectTrigger>
@@ -164,100 +138,64 @@ export default function CaseOutcomePredictor() {
                     </Select>
                   </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full bg-[#1a2847]"
-                    disabled={loading}
-                  >
-                    <Brain className="w-5 h-5 mr-2" />
-                    {loading ? "Analyzing Case..." : "Predict Outcome"}
+                  <Button type="submit" className="w-full bg-[#1a2847]" disabled={loading}>
+                    <FileText className="w-5 h-5 mr-2" />
+                    {loading ? "Preparing checklist..." : "Prepare checklist"}
                   </Button>
                 </form>
+                {error && (
+                  <p className="mt-4 text-sm text-red-700" role="alert">{error}</p>
+                )}
               </CardContent>
             </Card>
 
-            {/* RESULT */}
-            {showPrediction && prediction ? (
-              <Card>
-                <CardHeader className="bg-indigo-600 text-white">
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="w-5 h-5" />
-                    AI Prediction Results
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent className="p-6 space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      Possible Outcome
-                    </h3>
-                    <p className="text-xl text-blue-800">
-                      {prediction.possible_outcome?.probability}{" "}
-                      {prediction.possible_outcome?.result} Probability
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {prediction.possible_outcome?.basis}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      Key Factors Considered
-                    </h3>
-                    <ul className="space-y-1 text-sm text-gray-700">
-                      {prediction.key_factors?.map(
-                        (f: string, i: number) => (
-                          <li key={i}>✓ {f}</li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      AI Reasoning
-                    </h3>
-                    <p className="text-sm text-gray-700 whitespace-pre-line">
-                      {prediction.ai_reasoning}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {prediction.disclaimer}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      Possible Next Steps
-                    </h3>
-                    <ol className="list-decimal ml-6 text-sm text-gray-700">
-                      {prediction.next_steps?.map(
-                        (s: string, i: number) => (
-                          <li key={i}>{s}</li>
-                        )
-                      )}
-                    </ol>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="p-12 text-center text-gray-500">
-                  Enter case details to view AI-based prediction
-                </CardContent>
-              </Card>
-            )}
+            <Card>
+              <CardHeader className="bg-indigo-600 text-white">
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5" />
+                  Educational checklist
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-5" aria-live="polite">
+                {assessment ? (
+                  <>
+                    <div>
+                      <h2 className="font-semibold mb-1">Outcome assessment</h2>
+                      <p className="text-gray-800 font-medium">No outcome or probability is calculated.</p>
+                      <p className="text-sm text-gray-600 mt-2">{assessment.possible_outcome.basis}</p>
+                    </div>
+                    <div>
+                      <h2 className="font-semibold mb-2">General factors to discuss</h2>
+                      <ul className="space-y-2 text-sm text-gray-700 list-disc pl-5">
+                        {assessment.key_factors.map((factor) => <li key={factor}>{factor}</li>)}
+                      </ul>
+                    </div>
+                    <div>
+                      <h2 className="font-semibold mb-2">Suggested next steps</h2>
+                      <ol className="space-y-2 text-sm text-gray-700 list-decimal pl-5">
+                        {assessment.next_steps.map((step) => <li key={step}>{step}</li>)}
+                      </ol>
+                    </div>
+                    <p className="text-xs text-gray-500">{assessment.disclaimer}</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    Choose the available labels and prepare a general checklist. The inputs are not enough
+                    to assess a real case, and the result will not predict an outcome.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
-          {/* FINAL DISCLAIMER */}
           <Card className="mt-8 bg-yellow-50 border-yellow-200">
-            <CardContent className="p-4 flex gap-2 text-sm">
-              <Shield className="w-5 h-5 text-yellow-600" />
-              Always consult a qualified lawyer for real legal matters.
+            <CardContent className="p-4 flex gap-2 text-sm text-yellow-900">
+              <ShieldCheck className="w-5 h-5 shrink-0" />
+              Consult a qualified lawyer for real legal matters and verify applicable law against current official sources.
             </CardContent>
           </Card>
         </div>
-      </div>
-
+      </main>
       <Footer />
     </div>
   );
