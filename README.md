@@ -378,13 +378,13 @@ const getCaseChecklist = async (caseFactors) => {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(caseDetails)
+      body: JSON.stringify(caseFactors)
     }
   );
   return await response.json();
 };
 
-const result = await predictCase({
+const result = await getCaseChecklist({
   evidence_strength: "Moderate",
   past_record: "Minor"
 });
@@ -398,24 +398,24 @@ const result = await predictCase({
 - [x] IPC search functionality
 - [x] Basic crime analytics
 - [x] Women crimes dashboard
-- [x] Case outcome predictor
+- [x] Educational case-factor checklist (non-predictive)
 - [x] Legal awareness content
 
-### Phase 2: Enhancement (Q1 2026)
+### Future work: enhancements (not implemented yet)
 - [ ] LLM-powered legal chatbot
 - [ ] Advanced NLP search
 - [ ] User authentication
 - [ ] Bookmark & history features
 - [ ] Mobile responsive optimization
 
-### Phase 3: Scale (Q2 2026)
+### Future work: expansion (not implemented yet)
 - [ ] Document upload & analysis
 - [ ] PDF clause extraction
 - [ ] Lawyer directory
 - [ ] Multi-language support (Hindi, Tamil, Bengali)
 - [ ] Mobile apps (iOS/Android)
 
-### Phase 4: Intelligence (Q3 2026)
+### Future work: advanced features (not implemented yet)
 - [ ] AI legal assistant with memory
 - [ ] Personalized recommendations
 - [ ] Case law semantic search
