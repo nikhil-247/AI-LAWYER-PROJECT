@@ -176,7 +176,12 @@ def predict_case():
     past = payload.get("past_record", "None")
     valid_evidence = {"Limited", "Moderate", "Strong"}
     valid_past_records = {"None", "Minor", "Serious"}
-    if evidence not in valid_evidence or past not in valid_past_records:
+    if (
+        not isinstance(evidence, str)
+        or not isinstance(past, str)
+        or evidence not in valid_evidence
+        or past not in valid_past_records
+    ):
         return jsonify({
             "error": "evidence_strength must be Limited, Moderate, or Strong; past_record must be None, Minor, or Serious."
         }), 400
