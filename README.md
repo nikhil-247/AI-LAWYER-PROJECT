@@ -32,6 +32,10 @@
 
 ---
 
+## Project status and legal-use limitation
+
+This is an educational analytics prototype, not a legal decision system. The case-factor endpoint deliberately does not calculate conviction probabilities because this repository does not contain a validated legal-outcome model. Verify legal information against current official legislation and consult qualified counsel for case-specific advice.
+
 ## 🎯 Overview
 
 The **AI Lawyer Platform** is a comprehensive legal analytics and assistance system designed specifically for the Indian legal landscape. It bridges the gap between complex legal information and public accessibility by providing:
@@ -39,7 +43,7 @@ The **AI Lawyer Platform** is a comprehensive legal analytics and assistance sys
 - ✅ **Intelligent IPC Section Search**: Find and understand Indian Penal Code sections instantly
 - 📊 **Crime Analytics Dashboard**: Visualize crime trends with interactive charts
 - 👩 **Women Safety Analytics**: Dedicated insights on crimes against women
-- 🔮 **Case Outcome Predictor**: Evidence-based predictions for legal scenarios
+- 🔮 **Case Factors Checklist (non-predictive demo)**: Evidence-based predictions for legal scenarios
 - 📚 **Legal Awareness Hub**: Educational content on rights and legal processes
 - 🆘 **Emergency Helplines**: Quick access to legal and safety resources
 
@@ -76,7 +80,7 @@ Despite India's comprehensive legal system, critical barriers exist:
 - **Top 10 States**: Highest crime volume visualization
 - **Category Tracking**: Rape, dowry deaths, domestic violence, trafficking
 
-### 4. ⚖️ Case Outcome Predictor
+### 4. ⚖️ Case Factors Checklist (non-predictive demo)
 - **Evidence Assessment**: Analyze case strength
 - **Probability Calculation**: Data-driven outcome predictions
 - **Strategic Insights**: Key factors and recommended actions
